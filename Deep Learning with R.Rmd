@@ -1,0 +1,11 @@
+---
+title: "Deep Learning with R"
+author: "Chenshu Liu"
+date: "April 2022"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+  html_document: default
+---
+
