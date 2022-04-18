@@ -9,3 +9,48 @@ output:
   html_document: default
 ---
 
+\newpage
+\section{Introduction from Simple Linear Regression}
+Why is deep learning important and useful?
+```{r}
+# Scenario: predicting sales performance
+sales <- c(3, 4, 2, 4, 5, 6, 3, 9, 1, 12)
+```
+In the simplest way possible, we can simple find the mean of all the observations, and use the mean as our prediction for future sales performances
+$$Performance = \frac{\Sigma_{i=1}^n x_i}{n}$$
+```{r}
+mean.sales <- mean(sales)
+mean.sales
+```
+However, using only the mean as future prediction is not close to accurate, we are bound to make errors. Thus, to measure the magnitude of the error we are making using the mean, we introduce the concept of *sum of squared errors (SSE)*:
+$$SSE = \Sigma_{i = 1}^n (x_i - \bar{X})^2$$
+Where $\bar{X}$ is the mean of the observations. 
+
+**NOTE:** There the differences are squared because there can be positive and negative numbers in the differences, and summing positive and negative differences together will make 0. Thus, we need to **square** the differences to make them significant.
+```{r}
+SSE = sum((sales - mean.sales)^2)
+SSE
+```
+However, the measurement of deviation from actual observations has some limitations:
+\begin{enumerate}
+  \item In the calculation of SSE, we summed all the differences together, which means the sample size plays a role in the calculation of the deviation. Thus, in order to rule out the effect of sample size on SSE, we introduce the idea of **variance**: $var = \frac{\Sigma_{i = 1}^n (x_i - \bar{X})^2}{n - 1}$, where $n - 1$ is the degrees of freedom. Now, the standard deviation is a square-root version of the measurement of deviation, which makes more sense.
+  \item Because the differences are squared, it is hard for us to interpret the deviation, thus, we further introduce the idea of *standard deviation*: $s = \sqrt{\frac{\Sigma_{i = 1}^n (x_i - \bar{X})^2}{n - 1}}$
+\end{enumerate}
+Both the variance and standard deviation describes how bad the model's prediction is
+```{r}
+variance <- (sum((sales - mean.sales)^2))/(length(sales) - 1)
+variance
+# base R function
+var(sales)
+standard.deviation <- sqrt((sum((sales - mean.sales)^2))/(length(sales) - 1))
+standard.deviation
+# base R function
+sd(sales)
+```
+So, predictions are bound to have errors:
+\begin{align*}
+  y_i &= \bar{X} + \epsilon_i\\
+  target &= model + error
+\end{align*}
+**Take away:** After learning about how to measure the accuracy of a prediction model, we now need to know how to optimize the model and letting it to generate more accurate predictions. The task of optimizing the model that minimizes prediction error is the in the scope of Deep Learning!
+
