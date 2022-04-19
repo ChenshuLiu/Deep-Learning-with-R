@@ -10,8 +10,8 @@ output:
 ---
 
 \newpage
-\section{Introduction from Simple Linear Regression}
-Why is deep learning important and useful?
+\section{DL 01 Regression as a first step in deep learning}
+\subsection{Prediction from linear regression}
 ```{r}
 # Scenario: predicting sales performance
 sales <- c(3, 4, 2, 4, 5, 6, 3, 9, 1, 12)
@@ -22,6 +22,7 @@ $$Performance = \frac{\Sigma_{i=1}^n x_i}{n}$$
 mean.sales <- mean(sales)
 mean.sales
 ```
+\subsection{How to measure error in prediction}
 However, using only the mean as future prediction is not close to accurate, we are bound to make errors. Thus, to measure the magnitude of the error we are making using the mean, we introduce the concept of *sum of squared errors (SSE)*:
 $$SSE = \Sigma_{i = 1}^n (x_i - \bar{X})^2$$
 Where $\bar{X}$ is the mean of the observations. 
@@ -53,4 +54,60 @@ So, predictions are bound to have errors:
   target &= model + error
 \end{align*}
 **Take away:** After learning about how to measure the accuracy of a prediction model, we now need to know how to optimize the model and letting it to generate more accurate predictions. The task of optimizing the model that minimizes prediction error is the in the scope of Deep Learning!
+\subsection{How to potentially reduce prediction error}
+Assume that we have a base-line linear regression model that has a SSE we call *sst* (unsystematic variance), if we tune the slope and intercept of the base-line linear regression model, it has a new SSE we call *ssm* (systematic variance). Thus, in order to **measure the improvement in prediction accuracy brought by tuning the parameters in the model**, we introduce the measurement of R-squared: 
+$$R^2 = \frac{ssm}{sst}$$
+$R^2$ describes the amount of variance that can be described by the new, improved model, with respect to the base-line model.
+
+\subsection{Preview on next section}
+**Thought question:** we know that tuning the parameters in the model can lead to improvement in the prediction performance, but how can we find the optimal parameter that can minimize the prediction error (**core** goal in deep learning). This is what we will be covering in the next section
+
+\newpage
+\section{DL 02 Linear regression as a Simple Learner "SL"}
+\subsection{Related functions/calculations in prediction}
+\subsubsection{Prediction function}
+From last section, we introduced that predictions can be made with a linear function in the form of:
+$$\hat{y_i}(x_i) = \beta_0 + \beta_1x_i$$
+Where $\hat{y}$ is the predicted value based on the prediction function
+\subsubsection{Loss function}
+Loss function is used to measure the amount of error in **one of** our predictions using the model:
+$$L(x_i) = [\hat{y_i}(x_i) - y_i]^2$$
+The loss function is just the SSE that we introduced in the last section, where we take the square of the differences between observed and predicted value, at the ith position (because there are many observations and predictions)
+\subsubsection{Cost function}
+The cost function is a little from the loss function because the cost function is calculated from the persepective of the overall prediction, instead of each individual prediction's deviation (calculated by loss function):
+\begin{align*}
+  C(\beta_0, \beta_1) &= \frac{1}{n}\Sigma_{i = 1}^n L\\
+                      &= \frac{1}{n}\Sigma_{i = 1}^n [\hat{y_i}(x_i) - y_i]^2\\
+                      &= \frac{1}{n}\Sigma_{i = 1}^n [\beta_0 + \beta_1x_i - y_i]^2
+\end{align*}
+
+\subsection{How to find the optimial parameters}
+Say we find a cost function that is:
+\begin{align*}
+  C &= \frac{1}{5}\times{[\beta_0 + \beta_1(1.3) - 0.7]^2 + \dots + [\beta_0 + \beta_1(3.3) - 3.5]^2}\\
+  &= 6.55 - 4.68\beta_0 + \beta_0^2 - 13.132\beta_1 + 5.08\beta_0\beta_1 + 7.002\beta_1^2
+\end{align*}
+We can see that the cost function is composed of the two parameters $\beta_0$ and $\beta_1$, and we also know that we want to minimize the cost function. So, our goal now is to find optimal values of $\beta_0$ and $\beta_1$ so that the cost function is at its minimum. The way to achieve so, its through using **partial derivatives**
+
+\begin{align}
+  \frac{\partial C}{\partial \beta_0} &= 2\beta_0 + 5.08\beta_1 - 4.68\\
+  \frac{\partial C}{\partial \beta_1} &= 5.08\beta_0 + 14.004\beta_1 - 13.132
+\end{align}
+By solving (1) and (2), we can obtain the following augmented matrix for the linear system:
+$$\begin{bmatrix}
+2 & 5.08 & 4.68 \\
+5.08 & 14.004 & 13.132 \\
+\end{bmatrix}$$
+Then, we can reduce the augmented matrix which give us the final values for $\beta_0 = -0.532267$ and $\beta_1 = 1.13081$
+
+\subsection{Gradient descent}
+The case above is a two dimensional (having to variables), which is rather simple. However, in real-life scenarios, we often have many parameters and we still need to find the set of parameters that minimizes the cost function, so we ought to find a more generalized way to find optimal parameters, so we introduce the idea of **gradient descent**
+
+
+
+
+
+
+
+
 
