@@ -10,3 +10,7 @@ DL 01 Regression as a first step in deep learning: https://www.youtube.com/watch
 DL 02 Linear regression as a Simple Learner "SL": https://www.youtube.com/watch?v=FrceOv_oJac&list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9&index=2  
 
 DL 03 Linear regression as a Shallow Neural Network "SNN": https://www.youtube.com/watch?v=ZX4YSidnQaI&list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9&index=6
+
+DL 04 Logistic regression as a Neural Network: https://youtu.be/7TjN1kuJidA?list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9
+
+DL 05 Deep Neural Network in R - Example: https://youtu.be/Yf80GvemZw8?list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9 
