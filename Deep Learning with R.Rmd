@@ -9,6 +9,10 @@ output:
   html_document: default
 ---
 
+```{r, echo=FALSE}
+setwd("~/Documents/Programming/R/Deep Learning with R")
+```
+
 \newpage
 \section{DL 01 Regression as a first step in deep learning}
 \subsection{Prediction from linear regression}
@@ -62,6 +66,8 @@ $R^2$ describes the amount of variance that can be described by the new, improve
 \subsection{Preview on next section}
 **Thought question:** we know that tuning the parameters in the model can lead to improvement in the prediction performance, but how can we find the optimal parameter that can minimize the prediction error (**core** goal in deep learning). This is what we will be covering in the next section
 
+Reference video: https://www.youtube.com/watch?v=0F2bBZiirlg&list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9&index=1 
+
 \newpage
 \section{DL 02 Linear regression as a Simple Learner "SL"}
 \subsection{Related functions/calculations in prediction}
@@ -102,6 +108,62 @@ Then, we can reduce the augmented matrix which give us the final values for $\be
 
 \subsection{Gradient descent}
 The case above is a two dimensional (having to variables), which is rather simple. However, in real-life scenarios, we often have many parameters and we still need to find the set of parameters that minimizes the cost function, so we ought to find a more generalized way to find optimal parameters, so we introduce the idea of **gradient descent**
+\begin{enumerate}
+  \item Randomly choose a point in space and find the derivative (i.e. slope) of the cost function at that particular point: $slope_x$
+  \item Define a learning rate (LR), which is a predefined value for gradient descent
+  \item Calculate step: $x_{new} = x - LR\times slope_x$
+  \item Repeat the same process from step1-3 for $x_{new}$
+\end{enumerate}
+
+Reference video: https://www.youtube.com/watch?v=FrceOv_oJac&list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9&index=2 
+
+\newpage
+\section{DL 03 Linear regression as a Shallow Neural Network "SNN"}
+\subsection{Multiple linear regression in R}
+```{r}
+df <- read.csv("MultipleLinearRegression.csv")
+df
+```
+After preliminary view of the data, we can see that there are three independent variables $x_1, x_2, x_3$, so we are dealing with a multiple linear regression:
+$$\beta_0 + \beta_1x_1 + \beta_2x_2 + \beta_3x_3 \approx y$$
+Now, there are four parameters (i.e. $\beta_0, \beta_1, \beta_2, \beta_3$) that we need to tune, in order to optimize prediction, so we have the loss function for the four parameters:
+$$L^{(i)}(\beta_0, \beta_1, \beta_2, \beta_3) = (\beta_0 + \beta_1x_1^{(i)} + \beta_2x_2^{(i)} + \beta_3x_3^{(i)} - y^{(i)})^2$$
+```{r}
+# multiple linear regression
+mlr <- lm(y ~., data = df)
+summary(mlr)
+```
+
+\subsection{Single layer neural network}
+Based on the multiple linear regression we conducted in last subsection, we are actually getting into neural network layers. The multiple linear regression itself can be considered as a single layer network (Figure 1: Single Layer Neural Network), where the inputs are taken into hidden layers and multiplied with the weights (the parameters), and then output the prediction in the output layer
+
+![Single Layer Neural Network](Hand_written_notes/single layer NN.jpeg)
+
+Now, here's when things get interesting:
+\begin{enumerate}
+  \item We can use **forward propagation** to find output prediction (i.e. feeding in input values, and calculate for output)
+  \item We can also use **backward propagation** to better tune the parameters (i.e. using the predicted values, we can go back to tune the parameters and allow for better prediction performance)
+\end{enumerate}
+
+Reference video: https://www.youtube.com/watch?v=ZX4YSidnQaI&list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9&index=6
+
+\newpage
+\section{DL 04 Logistic regression as a Neural Network}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
