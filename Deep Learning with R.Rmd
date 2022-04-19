@@ -149,8 +149,151 @@ Reference video: https://www.youtube.com/watch?v=ZX4YSidnQaI&list=PLH5_eZVldmtUC
 
 \newpage
 \section{DL 04 Logistic regression as a Neural Network}
+\subsection{Why do we need logistic regression?}
+So far, we have looked at ways which we can find predictions about numerical outcome, but there are real-life cases where the prediction of binary outcomes is needed. It's where logistic regression comes into play. Logistic regression is specifically designed to deal with prediction of binary outcomes
+
+\subsection{Mechanism of logistic regression}
+Logistic regression is similar to simple linear regression in every way except for the outcome variable. Simple linear regression produces numerical outcomes while logistic regression produces binary outcome. Because the rest of the algorithm is just the same as simple linear regression, logistic regression also has parameters $\beta_0, \beta_1, \dots, \beta_n$, and the way in which we can achieve the best prediction model is to find values for the parameters that can minimize the cost function
+
+For logistic regression, the solution is a sigmoidal function:
+$$\sigma(z) = \frac{1}{1 + e^{-z}}$$
+Where z in the expression can be expressed as $z(\beta_0, \beta_1, \beta_2, \beta_3, \beta_4) = \beta_0 + \beta_1x_1 + \beta_2x_2 + \beta_3x_3 + \beta_4x_4$. One of the key property of sigmoidal function is that its solution is always between 0 and 1, and we can define a threshold (i.e. cutoff) to determine which side the outcome belongs to (i.e. 0 or 1), which fits the purpose of deriving binary outcomes
+
+Reference video: https://www.youtube.com/watch?v=7TjN1kuJidA&list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9&index=7 
+
+\newpage
+\section{DL 05 Deep Neural Network in R - Example}
+\subsection{Libaries \& Data}
+```{r, message = FALSE, warning = FALSE}
+# import spreadsheet files
+library(readr)
+# deep learning package
+library(keras)
+# dynamic interactive tables
+library(DT)
+
+data <- read_csv("SimulatedBinaryClassificationDataset.csv",
+                 col_names = TRUE)
+summary(data)
+```
+
+\subsection{Data preprocessing}
+Because deep learning is achieved through manipulation of matrices, we cannot pass in dataframe format data, so we need to change the format of the data to matrix during preprocessing
+```{r}
+# data.frame --> matrix
+data  <- as.matrix(data)
+# remove the row and col names, leaving only numerical values
+dimnames(data) = NULL
+mode(data)
+```
+Also, deep learning involves separate training and testing phases in order optimize the model's performance, so we need tp prepare for training and testing sets during preprocessing
+```{r}
+# train and test split index
+set.seed(123)
+index <- sample(2,
+                nrow(data),
+                replace = TRUE,
+                prob = c(0.9, 0.1))
+table(index)
+
+# data splitting
+x_train <- data[index == 1, 1:10]
+x_test <- data[index == 2, 1:10]
+y_test_actual <- data[index == 2, 11]
+```
+In cases where the target variable has multiple categories, our deep learning network wouldn't be able to process raw categorical information, so we need to convert the categories into numerical matrix format. One common way of encoding the target variable is through **one-hot encoding**:
+
+Simply put, one-hot encoding would expand the column vector of categories and make each category an independent column. If the original label fits into a category, then the column with the category will be labeled 1, otherwise 0
+```{r}
+# use teh to_categorical function in keras package for one-hot encoding
+y_train <- to_categorical(data[index == 1, 11])
+y_test <- to_categorical(data[index == 2, 11])
+```
+
+\subsection{Creating a simple model}
+```{r}
+model <- keras_model_sequential()
+
+model %>%
+  # layer_dense means a densely connected layer
+  layer_dense(name = "DeepLayer1",
+              units = 10, # hyperparameter: the number of nodes
+              activation = "relu",
+              # the first layer need to have specification about the input dimension
+              input_shape = c(10)) %>%
+  layer_dense(name = "DeepLayer2",
+              units = 10,
+              activation = "relu") %>%
+  layer_dense(name = "OutputLayer",
+              units = 2,
+              # softmax function will provide probabilities of the nodes
+              activation = "softmax")
+
+summary(model)
+```
+According to the summary table of the deep learning model, we can see that the number of parameters is very large:
+\begin{enumerate}
+  \item DeepLayer 1 has 110 parameters after passing the 10 input values, this is because neural network connects all the input with the nodes in the hidden layer which results in $10 \times 10 = 100$, and there is a bias term associating with every input, so the total number of parameters is $10 + 10\times 10 = 110$
+  \item DeepLayer 2 also has 110 parameters, which is from the same reason as DeepLayer 1
+  \item OutputLayer has 22 parameters: $10 \times 2 + 2 = 22$
+  \item Thus, the total number of parameters in our two hidden layer network is already so large: $110 + 110 + 22 = 242$, so we need to tune 242 parameters for the model through forward/backward propagation, which can make the performance so much better 
+\end{enumerate}
+
+\subsection{Compile the model}
+```{r}
+model %>% compile(
+  # another way to calculate loss, besides mean-squared-error
+  loss = "categorical_crossentropy", 
+  # a special way of gradient descent
+  optimizer = "adam",
+  # measurement of model performance - using accuracy to measure
+  metrics = c("accuracy")) 
+```
+
+\subsection{Fitting the data}
+```{r}
+history <- model %>%
+  fit(x_train,
+      y_train,
+      # number of full forward & backward propagation
+      # (i.e. run 10 times back and forth of all samples)
+      epoch = 10, 
+      # instead of propagating the whole dataset at one go, use smaller batches
+      batch_size = 256, 
+      # splitting the training set to test itself during training
+      validation_split = 0.1, 
+      verbose = 2)
+```
+Arguments for fitting the model (hyperparameters):
+\begin{enumerate}
+  \item epoch: one forward pass and one backward pass of \textbf{all} the training samples
+  \item batch size: the number of training examples in one forward/backward pass, usually, for better memory performance, we use values that are $2^n$
+\end{enumerate}
+```{r, message = F}
+# plot the training history
+plot(history)
+```
 
 
+\subsection{Model evaluation}
+Be aware of the new update in tensorFlow 2.8.0: https://keras.rstudio.com/reference/predict_proba.html 
+```{r}
+model %>%
+  evaluate(x_test,
+           # NOTE: here we are still using the one-hot encoded y_test
+           y_test)
+
+# form predictions
+pred <- model %>%
+  predict(x_test) %>%
+  k_argmax()
+# reference for converting tensor to R data types
+# https://torch.mlverse.org/technical/tensors/
+pred <- as.array(pred)
+table(Predicted = pred,
+      # NOTE: for confusion matrix, we are using the original y_test_actual, not encoded
+      Actual = y_test_actual)
+```
 
 
 
