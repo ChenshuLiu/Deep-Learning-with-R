@@ -14,3 +14,7 @@ DL 03 Linear regression as a Shallow Neural Network "SNN": https://www.youtube.c
 DL 04 Logistic regression as a Neural Network: https://youtu.be/7TjN1kuJidA?list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9
 
 DL 05 Deep Neural Network in R - Example: https://youtu.be/Yf80GvemZw8?list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9 
+
+DL 06 Bias and Variance in Deep Learning: https://youtu.be/OFj4LuWXXmY?list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9
+
+DL 07 Regularization in Deep Learning: https://youtu.be/xVY0Nf_HJqk?list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9 \& https://youtu.be/-UtOoyf7vuI?list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9

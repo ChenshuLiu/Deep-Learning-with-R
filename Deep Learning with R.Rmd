@@ -295,17 +295,107 @@ table(Predicted = pred,
       Actual = y_test_actual)
 ```
 
+\newpage
+\section{DL 06 Bias and Variance in Deep Learning}
+"Learning from the mistakes" is essential for improving the model's performance
+\subsection{Ground truth}
+Mistakes are defined with respect to the ground truth, but have you ever wondered: where does the ground truth come from? and Why are they the ground truth, but not others?
+\begin{enumerate}
+  \item Ground truth are the labeled data, either by professionals or experts in the area, that we generally believe are the truth, because of their authority in the field
+  \item It goes without saying that experts and professionals are also humans, so they do make mistakes sometimes, which means, the so called ground truth is sometimes even incorrect
+  \item There is a theoretical minimum possible error - **Bayes error**
+  \item The goal of neural network is to approach the Bayes error, or at least outperform human error
+\end{enumerate}
+
+After all, we need a measurement that can tell us whether our neural network is doing well. So, here's where **bias** and **variance** comes in:
+
+\subsection{Bias and Variance}
+The diagram a vivid depiction of the tradeoff between bias and variance (reference link: https://scikit-learn.org/stable/modules/learning_curve.html)
+
+![Bias vs. Variance](bias vs. variance.png)
+
+\begin{enumerate}
+  \item The graph on the left is a decision boundary, which does not describe the trend of the data well, so we call this type of scenario - \textbf{underfitting}. Underfitted model produce poor prediction after taking in input (Bias problem)
+  \item The graph in the middle is the optimal model, where we can see that the model is closely aligned with the true values - what we want to achieve in machine learning
+  \item The graph on the right is an overshot, because we have increase the degree of the polynomial curve so much, the model almost pass through every single data point, which seems like the model have \textbf{memorizing} the data. This type of scenario is called \textbf{overfitting}. Overfitted model separates the training data so well, but when we provide it with new data, then the performance will be deprecated a lot (Variance problem)
+\end{enumerate}
+
+Luckily, there are ways for us to quantify bias and variance, in order to inform changes in the neural network: training set error and validation set error:
+\begin{enumerate}
+  \item Overfitting (high variance): when the training set error is very small comparing with the validation set error
+  \item Underfitting (high bias): when both the training set error and the validation set error are large
+  \item \textbf{However,} there is a case when training set error is close to the validation set error while also pretty close to the Bayes error (optimal error). In this case, the model's performance is very good! and we can attribute the error to the intrinsic deviations in the labeling of the data itself, not the modeling
+\end{enumerate}
+
+After learning about how to identify the problem with the model (whether it has high bias or high variance), here are the things that we can do to resolve those problems:
+\begin{enumerate}
+  \item Correcting high bias
+    \begin{enumerate}
+      \item Create a bigger network (e.g. more layers, more nodes per layer)
+      \item Train for more epoch (high bias might be that gradient descent has not reached bottom yet)
+      \item Try a different architecture
+    \end{enumerate}
+  \item Correcting high variance
+    \begin{enumerate}
+      \item Capture more data
+      \item Augment the data
+      \item Regularization, dropout, batch normalization (what we can manipulate in code, will be discussed in the next section)
+    \end{enumerate}
+\end{enumerate}
+
+\newpage
+\section{DL 07 Regularization in Deep Learning}
+In the last section, we encountered a case where the model is too specific to the extent that it only memorizes the training data, but cannot generalize to new data. One way to deal with high variance is to use **regularization**.
+
+\subsection{Where does variance arise}
+Before we learn the mechanism of regularization, we need to know that the key to a functional neural network is the optimization of values of the parameters in the model (also called the unknowns). The performance of the model totally depends on how well the parameters are optimized. The collection of all the possible solutions is known as the **hypothesis space**. 
+
+However, from figure 2 in the last section, we learned that when the model is too "twisted" (mathematically, because it included too many parameters, so the model become too polynomial), the variance of the model is very high (i.e. describing the training data really well, but become really weak when new data is provided).
+
+Thus, in order to trim the model to make it more generalizable, we need to **reduce the hypothesis space**. Let hypothesis space denoted as H, then the goal is to find find the optimal subspace of the hypothesis space among ($H_1$ is subset of $H_2$, which are both subsets of $H_n$):
+$$H_1 \subset H_2 \subset \dots H_n$$
+
+\subsection{Levels of complexity}
+Recall that linear regression is just a single hidden layer system (where the weights are applied linearly to each input variable), which includes the following layers of complexity:
+\begin{enumerate}
+  \item The dimension of the input space (i.e. the number of feature variables that was provided)
+  \item $l_0$ complexity: the number of non-zero coefficients. In the case of linear regression: $w_1x_1 + w_2x_2 + \dots + w_nx_n$
+  \item $l_1$ complexity (also called \textbf{lasso complexity}): the sum of the absolute values of the coefficients: $\Sigma_{i=1}^n w_i$
+  \item $l_2$ complexity (also called \textbf{ridge complexity}): the sum of the squares of the coefficients: $\Sigma_{i=1}^n w_i^2$
+\end{enumerate}
+
+\subsection{$l_2$ Regularization}
+We will regularize using the $l_2$ complexity (i.e. $l_2$ regularization) in this section:
+
+\subsubsection{Setting up the cost function}
+Recall that in previous sections, we optimize the model using cost function:
+$$\mathcal{C}(W, b) = \frac{1}{m}\Sigma_{i=1}^m\mathcal{L}(\hat{y}^{(i)}, y^{(i)})$$
+Where $\mathcal{L}(\hat{y}^{(i)}, y^{(i)})$ is the loss function
+
+\subsubsection{Cost function with regularization}
+Now, we add a new term to the cost function, the $l_2$ complexity. The resulting cost function with regularization term is called **Tikhanov regularization**:
+$$\mathcal{C}(W, b) = \frac{1}{m}\Sigma_{i=1}^m\mathcal{L}(\hat{y}^{(i)}, y^{(i)}) + \frac{\lambda}{2m}\Sigma_{l=1}^L||W^{[l]}||^2$$
+Where:
+\begin{enumerate}
+  \item The L in the second term is the number of layers in the neural network, which is different from the loss function in the first term
+  \item $\lambda$ is a hyperparameter that means the weight of the regularization term to make it significant to the cost function, so we can reduce the dimension of the weight terms (i.e. reduce the complexity of the neural network). The value of $\lambda$ is defined by us, which depends on the amount of significance we want to attribute to the weight terms
+  \item W is a matrix of weights with dimension $n^{[l]}\times n^{[l] - 1}$ where l is the current layer and $n^{[l]}$ is the number of nodes at layer l
+  $$||W^{[l]}||^2 = \Sigma_{i=1}^{n^{[l]}}\Sigma_{j=1}^{n^{[l-1]}}(w_{ij})^2$$
+  \item The $\frac{1}{2}$ in the second term is just a scaling factor for easier partial derivative during back propagation 
+\end{enumerate}
+
+\subsubsection{Logic behind the regularization term}
+The reason why we add the new term of $l_2$ complexity is that, as we are trying to minimize the cost function, we would also want to minimize $\frac{\lambda}{2m}\Sigma_{l=1}^L||W^{[l]}||^2$ (i.e. reduce the weights to approach 0). Reducing the weights to let them approach 0 is similar to dimension reduction, which fits the purpose of reducing the hypothesis space (**since hypothesis space contains possible parameters, or weights, if some of them approaches zero, then the dimension will be reduced, then the model's complexity will reduce to avoid high variance**)
+
+\subsubsection{Back propagation}
+After setting up the logic behind the $l_2$ regularization term, we need to get back on track to our goal of finding the best parameters, **with a reduced hypothesis space dimension**. The way to go is through gradient descent in back propagation:
+$$\frac{\partial \mathcal{C}(W, b)}{\partial W^{[l]}} = \psi + \frac{\lambda}{m}W^{[l]}$$
+Where $\psi$ is the original derivative of the cost function without the regularization term. Now, apply gradient descent for the parameters:
+$$W^{[l]}_{new} = W^{[l]} - \alpha \frac{\partial \mathcal{C}(W, b)}{\partial W^{[l]}}$$
 
 
-
-
-
-
-
-
-
-
-
+\subsection{Dropout regularization}
+In the last subsection, we talked about $l_2$ regularization. Regularization, especially $l_2$ regularization, is commonly used to **decrease the variance in deep neural networks**. Adding the extra regularization term to the cost function creates a simpler, more linear model, that can effectively avoid overfitting. Dropout regularization basically does the same thing, except it randomly select nodes in each hidden layer of the neural network and assign them to zero. After the assignment, the number of complexity (i.e. number of parameters) will be reduced tremendously, which fits the purpose of reducing the hypothesis space
 
 
 
