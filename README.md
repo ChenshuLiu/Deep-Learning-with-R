@@ -18,3 +18,7 @@ DL 05 Deep Neural Network in R - Example: https://youtu.be/Yf80GvemZw8?list=PLH5
 DL 06 Bias and Variance in Deep Learning: https://youtu.be/OFj4LuWXXmY?list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9
 
 DL 07 Regularization in Deep Learning: https://youtu.be/xVY0Nf_HJqk?list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9 \& https://youtu.be/-UtOoyf7vuI?list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9
+
+DL 08 Regularization and dropout using Keras in R: https://youtu.be/jPlSXWMPh08?list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9 
+
+DL 09 Improving learning in Deep Neural Netorks "DNNs": https://youtu.be/nlK0AYCEDdw?list=PLH5_eZVldmtUCZWp-eL0lVL7SA6qyDIf9

@@ -6,6 +6,7 @@ output:
   pdf_document:
     toc: true
     toc_depth: 2
+    number_sections: true
   html_document: default
 ---
 
@@ -571,9 +572,32 @@ plot(drop_history)
 ```
 The dropout regularization seems to generate a further improvement from the l2 regularization. The gap between training loss and validation loss is getting even smaller
 
+\newpage
+\section{DL 09 Improving learning in Deep Neural Networks "DNNs"}
+\subsection{Normalization}
+The data comes in with different scales of parameters, some may be single digits, while others can be as large as hundreds of thousands. With such great variation in the scale of the numbers, gradient descent may become computationally more expensive. Thus, the first step of creating a neural network is to normalize the data values to a similar scale:
+$$\frac{x_i - \mu}{\sigma^2}$$
+Where $\mu$ is the mean of the feature variable in the training set, $\sigma^2$ is the variance of the feature variable in the training set.
 
+**NOTE:** scaling need to be applied to both the training and test set. The test set need to be scaled with the same scaling factors $\mu \ \ \& \ \ \sigma^2$, instead of using mean and variance of its own
 
+\subsection{Vanishing and exploding gradients}
+In mathematics, when we multiply two fractions, both smaller than 1, we have the following:
+$$\frac{1}{2} \times \frac{2}{3} = \frac{1}{3}$$
+$$\frac{1}{4} \times \frac{9}{10} = \frac{9}{40}$$
+The resulting fraction is getting smaller and smaller, smaller than either one of the contributing fraction during multiplication. Thus, we have the following rule:
+$$\frac{a}{b} \times \frac{c}{d} = \frac{ac}{bd}, \forall a<b, c<d, {a, b, c, d} \in Z^+$$
+$$(\frac{a}{b} > \frac{ac}{bd}) \land (\frac{c}{d} > \frac{ac}{bd})$$
+Using this logic, if we are multiplying weights with other weights in a deep neural network and the weights are small, then the resulting product will eventually vanish (**Vanishing gradient problem**)
 
+On the other hand, if the weights are larger than 1, after numerous multiplications, the resulting weight product would be very large (**Exploding gradient problem**)
+
+One way to prevent such vanishing and exploding gradient problems is to normalize the weights before-hand. The initial weights are just random values, so we can manipulate those weights to prevent exploding or vanishing. The way to do is to set the variance of the weight matrix to the reciprocal of the number of input nodes to be multiplied by the matrix
+
+\subsection{Mini-batch gradient descent}
+Mini-batch gradient descent is a way to modify the parameters through gradient descent for more times. Because traditional gradient descent is completed per epoch, that is only when the whole dataset has went forward and backward, can the parameter be updated using gradient descent, which is pretty inefficient. Thus, we introduce the mini-batch gradient descent, which is dividing the huge dataset into smaller batches, and after every back and forth of each small batch, the parameters can be tuned through gradient descent using the mini-batch. This would allow for much more tuning cycles of the parameters
+
+**Extreme case:** if the mini-batch is chosen to have size 1, then the gradient descent is called *stochastic gradient descent*
 
 
 
