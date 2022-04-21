@@ -397,6 +397,196 @@ $$W^{[l]}_{new} = W^{[l]} - \alpha \frac{\partial \mathcal{C}(W, b)}{\partial W^
 \subsection{Dropout regularization}
 In the last subsection, we talked about $l_2$ regularization. Regularization, especially $l_2$ regularization, is commonly used to **decrease the variance in deep neural networks**. Adding the extra regularization term to the cost function creates a simpler, more linear model, that can effectively avoid overfitting. Dropout regularization basically does the same thing, except it randomly select nodes in each hidden layer of the neural network and assign them to zero. After the assignment, the number of complexity (i.e. number of parameters) will be reduced tremendously, which fits the purpose of reducing the hypothesis space
 
+\newpage
+\section{DL 08 Regularization and dropout using Keras in R}
+\subsection{Libraries}
+```{r message=FALSE, warning=FALSE}
+library(keras)
+library(readr)
+library(tidyr)
+library(tibble)
+library(plotly)
+```
+
+\subsection{Data}
+The dataset is built into Keras, which contains text samples using multi-hot encoding (recall from previous sections where we talked about using one-hot encoding to encode for categorical variables)
+```{r}
+# specify the number of feature variables for the dataset to be downloaded
+num_words <- 5000
+imdb <- dataset_imdb(num_words = num_words)
+```
+\subsubsection{Train test set split}
+```{r}
+# train test split
+c(train_data, train_labels) %<-% imdb$train
+c(test_data, test_labels) %<-% imdb$test
+# training and test data are both stored as lists
+length(train_data)
+```
+\subsubsection{Multi-hot encoding}
+Because the dataset is stored as texts, but neural networks requires numerical matrices, we need to encode the text. At the same time, because there are so many parameters (we chose to include 5000 words as parameters), we will use a encoding method called **multi-hot encoding** which is similar to one-hot encoding, but in a much larger scale
+```{r}
+# multi-hot encoding
+multi_hot_sequences <- function(sequences, dimension){
+  multi_hot <- matrix(0, 
+                      # the number of samples in the sequences
+                      # sequences are stored as lists
+                      nrow = length(sequences), 
+                      ncol = dimension)
+  for(i in 1 : length(sequences)){
+    # sequences[[i]] extracts the label of the words in the text sample i
+    # which ever word is included in that sequence will be assigned 1 at row i
+    multi_hot[i, sequences[[i]]] <- 1
+  }
+  multi_hot
+}
+
+train_data <- multi_hot_sequences(train_data, num_words)
+test_data <- multi_hot_sequences(test_data, num_words)
+```
+
+\subsection{Modeling}
+\subsubsection{Base-line model}
+```{r}
+baseline_model <-
+  keras_model_sequential() %>%
+  layer_dense(units = 16, activation = "relu", input_shape = num_words) %>%
+  layer_dense(units = 16, activation = "relu") %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+baseline_model %>% compile(
+  optimizer = "adam",
+  loss = "binary_crossentropy",
+  metrics = list("accuracy")
+)
+
+baseline_model %>% summary()
+```
+\subsubsection{Fit base-line model}
+```{r}
+baseline_history <- baseline_model %>% fit(
+  train_data,
+  train_labels,
+  epochs = 20,
+  # recall: batch size controls the number of training samples to work through before updating parameters
+  batch_size = 512,
+  validation_data = list(test_data, test_labels),
+  # get loss and accuracy reports
+  verbose = 2
+)
+
+plot(baseline_history)
+```
+From the training validation history graph, we can see that there is a huge discrepancy between the training loss (very low) and the validation loss (very high). Also, the training accuracy is very high comparing with the validation accuracy. This high discrepancy indicates that our neural network is **overfitting** the training samples (high variance)
+
+\subsection{Fixing overfitting}
+\subsubsection{Smaller model}
+```{r}
+smaller_model <- keras_model_sequential() %>%
+  layer_dense(units = 4, activation = "relu", input_shape = num_words) %>%
+  layer_dense(units = 4, activation = "relu") %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+smaller_model %>% compile(
+  optimizer = "adam",
+  loss = "binary_crossentropy",
+  metrics = list("accuracy")
+)
+
+smaller_model %>% summary()
+
+smaller_history <- smaller_model %>% fit(
+  train_data,
+  train_labels,
+  epoch = 20,
+  batch_size = 512,
+  validation_data = list(test_data, test_labels),
+  verbose = 2
+)
+
+plot(smaller_history)
+```
+According to the plot, we can still see a huge discrepancy between the loss of the training and validation set. This is still an indication of overfitting on the training set, learning to high variance
+
+\subsubsection{L2 regularization}
+```{r}
+l2_model <-
+  keras_model_sequential() %>%
+  layer_dense(units = 16, activation = "relu", input_shape = num_words,
+              # apply regularization in the layer_dense function's argument
+              kernel_regularizer = regularizer_l2(l = 0.001)) %>%
+  layer_dense(units = 16, activation = "relu",
+              kernel_regularizer = regularizer_l2(l = 0.001)) %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+l2_model %>% compile(
+  optimizer = "adam",
+  loss = "binary_crossentropy",
+  metrics = list("accuracy")
+)
+
+l2_model %>% summary()
+
+l2_history <- l2_model %>% fit(
+  train_data,
+  train_labels,
+  epoch = 20,
+  batch_size = 512,
+  validation_data = list(test_data, test_labels),
+  verbose = 2
+)
+
+plot(l2_history)
+```
+There's definitely still overfitting in the network, but not as bad as when there were not regularization applied
+
+\subsubsection{Dropout regularization}
+```{r}
+drop_model <- keras_model_sequential() %>%
+  layer_dense(units = 16, activation = "relu", input_shape = num_words) %>%
+  # a new layer to specify the dropout rate
+  layer_dropout(0.6) %>%
+  layer_dense(units = 16, activation = "relu") %>%
+  layer_dropout(0.6) %>%
+  layer_dense(units = 1, activation = "sigmoid")
+
+drop_model %>% compile(
+  optimizer = "adam",
+  loss = "binary_crossentropy",
+  metrics = list("accuracy")
+)
+
+drop_model %>% summary()
+
+drop_history <- drop_model %>% fit(
+  train_data,
+  train_labels,
+  epoch = 20,
+  batch_size = 512,
+  validation_data = list(test_data, test_labels),
+  verbose = 2
+)
+
+plot(drop_history)
+```
+The dropout regularization seems to generate a further improvement from the l2 regularization. The gap between training loss and validation loss is getting even smaller
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
