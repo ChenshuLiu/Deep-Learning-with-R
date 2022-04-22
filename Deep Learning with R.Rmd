@@ -599,15 +599,154 @@ Mini-batch gradient descent is a way to modify the parameters through gradient d
 
 **Extreme case:** if the mini-batch is chosen to have size 1, then the gradient descent is called *stochastic gradient descent*
 
+\subsection{Gradient descent with momentum}
+Outside reference link: https://youtu.be/NxTFlzBjS-4 
 
+\subsubsection{Exponentially weighted moving average (EWMA)}
+In previous sections, gradient descent is conducted according to the current partial derivative. However, if the data points have intrinsic variance, the gradient descent would fluctuate a lot. Thus, to adapt slower (i.e. with more latency) to the data, we introduce the way of **Exponentially Weighted Moving Average (EWMA)**:
+$$v_i = \beta\times v_{i-1} + (1-\beta)\times y_i$$
+Where $y_i$ is the current partial derivative, $v_{i-1}$ is the previous moving average, and $\beta$ is the weight assigned to the gradients, the decay factor. The equation approximate to averaging the past $\frac{1}{1-\beta}$ data points with weights (e.g. if we assign $\beta = 0.9$, then the moving average will take the weighted average of the past $\frac{1}{1-0.9} = 10$ data points. Visit https://youtu.be/NxTFlzBjS-4 for more detailed explanation on the approximation of the number of previous data points taken into account for the average)
 
+So, now the gradient descent with momentum becomes:
+$$V_{\partial W_i} = \beta_vV_{\partial W_{i-1}} + (1-\beta)\partial W_i$$
+Then, instead of multiplying the step size with the partial derivative at the current point, the step size is multiplied with the moving average (to let more data points contribute to the descent)
+$$W_i = W_{i-1}- \alpha V_{\partial W_{i-1}}$$
 
+\subsubsection{Root mean square propagation (RMSprop)}
+Root Mean Square Propagation (RMSprop) is very similar to EWMA except that the partial derivative in the average calculation is squared:
+$$S_{\partial W_i} = \beta_s S_{\partial W_{i-1}} + (1-\beta)\partial W_{i}^2$$
+$$W_i = W_{i-1} - \alpha \frac{\partial W_{i-1}}{\sqrt{S_{\partial W_{i-1}}}}$$
 
+\subsubsection{Adaptive moment estimation (ADAM)}
+One of the most widely used optimization algorithm for gradient descent is the combination of EWMA and RMSprop, making the adaptive moment estimation algorithm (ADAM)
 
+Besides combining the two (i.e. EWMA and RMSprop), we need to conduct bias correction (because it is hard to get the momentum going, since the initial average is just 0):
+$$\hat{V_{\partial W_i}} = \frac{V_{\partial W_i}}{1-\beta^i}$$
+$$\hat{S_{\partial W_i}} = \frac{S_{\partial W_i}}{1-\beta^i}$$
+Then, combine the two algorithms to update the weight:
+$$W_{i+1} = W_i - \alpha \frac{\hat{V_{\partial W_i}}}{\sqrt{\hat{S_{\partial W_i}}}}$$
 
+\newpage
+\section{DL 10 Using tfruns to compare models}
+In this section we will be implementing the optimization techniques that we introduced in the last section
 
+\subsection{Milestone 1: Loading the data}
+```{r, warning = FALSE}
+library(keras)
+library(readr)
 
+train.import <- read_csv("ImprovementsTrain.csv")
+test.import <- read_csv("ImprovementsTest.csv")
 
+# recall that NN are constructed based on numerical matrices
+# we need to cast dataframe into matrix and remove column names
+train.import <- as.matrix(train.import)
+dimnames(train.import) <- NULL
+test.import <- as.matrix(test.import)
+dimnames(test.import) <- NULL
+
+# train & test sets
+train_data <- train.import[, 1:12]
+train_labels <- train.import[, 13]
+test_data <- test.import[, 1:12]
+test_labels <- test.import[, 13]
+```
+
+\subsection{Milestone 2: Normalizing the data}
+Recall that normalization of the data can cast the data points into similar scales and reduce the computation expense:
+$$\frac{x-\mu}{\sigma}$$
+```{r}
+feature.means = vector(length = ncol(train_data))
+for(i in 1:length(feature.means)){
+  # calculate the mean of each column in the training set
+  feature.means[i] = mean(train_data[, i])
+}
+
+feature.sds = vector(length = ncol(train_data))
+for(i in 1:length(feature.sds)){
+  # calculate the standard deviation of each column in the training set
+  feature.sds[i] <- sd(train_data[, i])
+}
+```
+**NOTE:** the normalization parameter should be from the training set, and be applied to **both the training and test sets**
+```{r}
+# normalize the feature variables in the training set
+train_data_normalized <- matrix(nrow = nrow(train_data),
+                                ncol = ncol(train_data))
+for(n in 1:ncol(train_data)){
+  for(m in 1:nrow(train_data)){
+    train_data_normalized[m, n] <- (train_data[m, n] - feature.means[n])/feature.sds[n]
+  }
+}
+
+# normalize the feature variables in the testing set
+test_data_normalized <- matrix(nrow = nrow(test_data),
+                                ncol = ncol(test_data))
+for(n in 1:ncol(test_data)){
+  for(m in 1:nrow(test_data)){
+    test_data_normalized[m, n] <- (test_data[m, n] - feature.means[n])/feature.sds[n]
+  }
+}
+```
+
+\subsection{Milestone 3: modeling}
+Incorporate the gradient descent algorithms we discussed in the last section together with the sequential dense layer model we have created before:
+\subsubsection{Baseline model}
+```{r}
+# use normal distribution to set the very first weights in tensor
+init_w <- initializer_random_normal(mean = 0,
+                                    stddev = 0.05,
+                                    seed = 123)
+# by default, all the bias terms are set to 0 initially
+init_B <- initializer_zeros()
+
+baseline_model <- keras_model_sequential() %>%
+  layer_dense(units = 48,
+              activation = "relu",
+              # the initial weights for the NN
+              kernel_initializer = init_w,
+              input_shape = c(12)) %>%
+  layer_dense(units = 48,
+              activation = "relu") %>%
+  layer_dense(units = 1,
+              activation = "sigmoid")
+
+summary(baseline_model)
+```
+\subsubsection{Propagation with momentum}
+```{r}
+baseline_model %>% compile(
+  optimizer = optimizer_rmsprop(
+    # learning rate (i.e. step size)
+    lr = 0.001,
+    # the decay factor (i.e. the weight to the previous gradient, beta)
+    rho = 0.9
+  ),
+  loss = "binary_crossentropy",
+  metrics = list("accuracy")
+)
+```
+\subsubsection{Fit the model}
+```{r}
+baseline_history <- baseline_model %>%
+  fit(train_data_normalized,
+      train_labels,
+      epochs = 40,
+      # conditions when to stop, save computation time
+      # avoid scenario of training without improvements
+      callbacks = list(callback_early_stopping(
+        # use change in loss to determine whether to stop
+        monitor = "loss",
+        # wait for two runs, if unchanged in loss, then stop
+        patience = 2
+      )),
+      batch_size = 512,
+      validation_data = list(test_data_normalized, test_labels),
+      verbose = 2)
+
+plot(baseline_history)
+```
+**For more documentations on devising NN algorithms, visit:** https://keras.rstudio.com/reference/index.html 
 
 
 

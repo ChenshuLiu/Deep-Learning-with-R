@@ -210,3 +210,118 @@ drop_history <- drop_model %>% fit(
 
 plot(drop_history)
 ##########################################################################
+# Optimization of neural nets
+library(keras)
+library(readr)
+
+train.import <- read_csv("ImprovementsTrain.csv")
+test.import <- read_csv("ImprovementsTest.csv")
+
+# recall that NN are constructed based on numerical matrices
+# we need to cast dataframe into matrix and remove column names
+train.import <- as.matrix(train.import)
+dimnames(train.import) <- NULL
+test.import <- as.matrix(test.import)
+dimnames(test.import) <- NULL
+
+# train & test sets
+train_data <- train.import[, 1:12]
+train_labels <- train.import[, 13]
+test_data <- test.import[, 1:12]
+test_labels <- test.import[, 13]
+
+feature.means = vector(length = ncol(train_data))
+for(i in 1:length(feature.means)){
+  # calculate the mean of each column in the training set
+  feature.means[i] = mean(train_data[, i])
+}
+
+feature.sds = vector(length = ncol(train_data))
+for(i in 1:length(feature.sds)){
+  # calculate the standard deviation of each column in the training set
+  feature.sds[i] <- sd(train_data[, i])
+}
+
+# normalize the feature variables in the training set
+train_data_normalized <- matrix(nrow = nrow(train_data),
+                                ncol = ncol(train_data))
+for(n in 1:ncol(train_data)){
+  for(m in 1:nrow(train_data)){
+    train_data_normalized[m, n] <- (train_data[m, n] - feature.means[n])/feature.sds[n]
+  }
+}
+
+# normalize the feature variables in the testing set
+test_data_normalized <- matrix(nrow = nrow(test_data),
+                               ncol = ncol(test_data))
+for(n in 1:ncol(test_data)){
+  for(m in 1:nrow(test_data)){
+    test_data_normalized[m, n] <- (test_data[m, n] - feature.means[n])/feature.sds[n]
+  }
+}
+
+# use normal distribution to set the very first weights in tensor
+init_w <- initializer_random_normal(mean = 0,
+                                    stddev = 0.05,
+                                    seed = 123)
+# by default, all the bias terms are set to 0 initially
+init_B <- initializer_zeros()
+
+baseline_model <- keras_model_sequential() %>%
+  layer_dense(units = 48,
+              activation = "relu",
+              # the initial weights for the NN
+              kernel_initializer = init_w,
+              input_shape = c(12)) %>%
+  layer_dense(units = 48,
+              activation = "relu") %>%
+  layer_dense(units = 1,
+              activation = "sigmoid")
+
+summary(baseline_model)
+
+baseline_model %>% compile(
+  optimizer = optimizer_rmsprop(
+    # learning rate (i.e. step size)
+    lr = 0.001,
+    # the decay factor (i.e. the weight to the previous gradient, beta)
+    rho = 0.9
+  ),
+  loss = "binary_crossentropy",
+  metrics = list("accuracy")
+)
+
+baseline_history <- baseline_model %>%
+  fit(train_data_normalized,
+      train_labels,
+      epochs = 40,
+      # conditions when to stop, save computation time
+      # avoid scenario of training without improvements
+      callbacks = list(callback_early_stopping(
+        # use change in loss to determine whether to stop
+        monitor = "loss",
+        # wait for two runs, if unchanged in loss, then stop
+        patience = 2
+      )),
+      batch_size = 512,
+      validation_data = list(test_data_normalized, test_labels),
+      verbose = 2)
+
+plot(baseline_history)
+##########################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
