@@ -122,6 +122,7 @@ Reference video: https://www.youtube.com/watch?v=FrceOv_oJac&list=PLH5_eZVldmtUC
 \section{DL 03 Linear regression as a Shallow Neural Network "SNN"}
 \subsection{Multiple linear regression in R}
 ```{r}
+setwd("~/Documents/Programming/R/Deep Learning with R/Datasets")
 df <- read.csv("MultipleLinearRegression.csv")
 df
 ```
@@ -173,6 +174,7 @@ library(keras)
 # dynamic interactive tables
 library(DT)
 
+setwd("~/Documents/Programming/R/Deep Learning with R/Datasets")
 data <- read_csv("SimulatedBinaryClassificationDataset.csv",
                  col_names = TRUE)
 summary(data)
@@ -478,6 +480,7 @@ baseline_history <- baseline_model %>% fit(
 
 plot(baseline_history)
 ```
+
 From the training validation history graph, we can see that there is a huge discrepancy between the training loss (very low) and the validation loss (very high). Also, the training accuracy is very high comparing with the validation accuracy. This high discrepancy indicates that our neural network is **overfitting** the training samples (high variance)
 
 \subsection{Fixing overfitting}
@@ -539,6 +542,7 @@ l2_history <- l2_model %>% fit(
 
 plot(l2_history)
 ```
+
 There's definitely still overfitting in the network, but not as bad as when there were not regularization applied
 
 \subsubsection{Dropout regularization}
@@ -570,6 +574,7 @@ drop_history <- drop_model %>% fit(
 
 plot(drop_history)
 ```
+
 The dropout regularization seems to generate a further improvement from the l2 regularization. The gap between training loss and validation loss is getting even smaller
 
 \newpage
@@ -635,6 +640,7 @@ In this section we will be implementing the optimization techniques that we intr
 library(keras)
 library(readr)
 
+setwd("~/Documents/Programming/R/Deep Learning with R/Datasets")
 train.import <- read_csv("ImprovementsTrain.csv")
 test.import <- read_csv("ImprovementsTest.csv")
 
@@ -746,6 +752,7 @@ baseline_history <- baseline_model %>%
 
 plot(baseline_history)
 ```
+
 **For more documentations on devising NN algorithms, visit:** https://keras.rstudio.com/reference/index.html 
 
 
