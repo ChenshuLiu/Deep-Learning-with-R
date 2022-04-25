@@ -309,7 +309,159 @@ baseline_history <- baseline_model %>%
 
 plot(baseline_history)
 ##########################################################################
+# Deep Neural Network for regression problem
+library(readr)
+library(keras)
 
+setwd("~/Documents/Programming/R/Deep Learning with R/Datasets")
+data.set <- read_csv("RegressionData.csv",
+                     col_names = FALSE)
+# transform dataframe to matrix
+data.set <- as.matrix(data.set)
+# remove column names
+dimnames(data.set) <- NULL
+
+# train test split
+set.seed(123)
+index <- sample(2,
+                nrow(data.set),
+                replace = TRUE,
+                prob = c(0.8, 0.2))
+
+x_train <- data.set[index == 1, 1:10]
+x_test <- data.set[index == 2, 1:10]
+y_train <- data.set[index == 1, 11]
+y_test <- data.set[index == 2, 11]
+
+# normalizing data
+mean.train <- apply(x_train, 2, mean)
+sd.train <- apply(x_train, 2, sd)
+x_train <- scale(x_train)
+# use the normalizing parameters from training set to normalize testing set
+x_test <- scale(x_test,
+                center = mean.train,
+                scale = sd.train)
+
+# creating the model
+model <- keras_model_sequential() %>%
+  layer_dense(units = 25,
+              activation = "relu",
+              input_shape = c(10)) %>%
+  layer_dropout(0.2) %>%
+  layer_dense(units = 25,
+              activation = "relu") %>%
+  layer_dropout(0.2) %>%
+  layer_dense(units = 25,
+              activation = "relu") %>%
+  layer_dropout(0.2) %>%
+  layer_dense(units = 1)
+
+model %>% summary()
+
+# compile the model
+model %>% compile(
+  # the metric for propagation
+  loss = "mse",
+  optimizer = optimizer_rmsprop(),
+  # not for propagation, but for user feedback
+  # letting us know the model's performance
+  metrics = c("mean_absolute_error"))
+
+# fitting the data
+model_history <- model %>%
+  fit(x_train,
+      y_train,
+      epoch = 50,
+      batch_size = 32,
+      validation_split = 0.1,
+      callbacks = c(callback_early_stopping(monitor = "val_mean_absolute_error",
+                                            patience = 5)),
+      verbose = 2)
+
+plot(model_history)
+
+# testing the model
+c(loss, mae) %<-% (model %>% evaluate(x_test, y_test, verbose = 0))
+paste0("Mean Absolute Error on test set is:", mae)
+##########################################################################
+# Convolution Neural Network in R
+library(keras)
+
+# a dataset of numerous images of hand-written numbers from 0-9
+mnist <- dataset_mnist()
+x_train <- mnist$train$x
+y_train <- mnist$train$y
+x_test <- mnist$test$x
+y_test <- mnist$test$y
+
+dim(x_train)
+
+img_row <- dim(x_train)[2]
+img_col <- dim(x_test)[3]
+
+# images should have three channels, but the data only has two, need transformation
+# because this is gray-scale image, the third channel only has one layer
+x_train <- array_reshape(x_train,
+                         c(nrow(x_train),
+                           img_row,
+                           img_col, 1))
+x_test <- array_reshape(x_test,
+                        c(nrow(x_test),
+                          img_row,
+                          img_col, 1))
+input_shape <- c(img_row, img_col, 1)
+
+# there is one extra channel in x_train now
+dim(x_train)
+
+# normalize the datasets by dividing the number 255
+# because the color gradient is from 0(black) to 255(white)
+# dividing by 255 can transform the entries to values between 0 and 1
+x_train <- x_train/255
+x_test <- x_test/255
+
+# use one-hot encoding to encode the y values
+# y values are labels for number 0 to 9, thus we need 10 categories
+y_train <- to_categorical(y_train, num_classes = 10)
+y_test <- to_categorical(y_test, num_classes = 10)
+
+model <- keras_model_sequential() %>%
+  layer_conv_2d(
+    # number of filters for transformation
+    filters = 16,
+    # size of the filters
+    kernel_size = c(3,3),
+    activation = 'relu',
+    input_shape = input_shape) %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>% 
+  layer_dropout(rate = 0.25) %>% 
+  layer_flatten() %>% 
+  layer_dense(units = 10,
+              activation = 'relu') %>% 
+  layer_dropout(rate = 0.5) %>% 
+  layer_dense(units = 10,
+              # for categorical prediction
+              activation = 'softmax')
+
+model %>% summary()
+
+model %>% compile(
+  loss = loss_categorical_crossentropy,
+  optimizer = optimizer_adadelta(),
+  metrics = c('accuracy')
+)
+
+model %>% fit(
+  x_train, 
+  y_train,
+  batch_size = 128,
+  epochs = 12,
+  validation_split = 0.2
+)
+
+score <- model %>% evaluate(x_test,
+                            y_test)
+score
 
 
 
