@@ -139,7 +139,7 @@ summary(mlr)
 \subsection{Single layer neural network}
 Based on the multiple linear regression we conducted in last subsection, we are actually getting into neural network layers. The multiple linear regression itself can be considered as a single layer network (Figure 1: Single Layer Neural Network), where the inputs are taken into hidden layers and multiplied with the weights (the parameters), and then output the prediction in the output layer
 
-![Single Layer Neural Network](Hand_written_notes/single layer NN.jpeg)
+![Single Layer Neural Network](Images/single layer NN.jpeg)
 
 Now, here's when things get interesting:
 \begin{enumerate}
@@ -315,7 +315,7 @@ After all, we need a measurement that can tell us whether our neural network is 
 \subsection{Bias and Variance}
 The diagram a vivid depiction of the tradeoff between bias and variance (reference link: https://scikit-learn.org/stable/modules/learning_curve.html)
 
-![Bias vs. Variance](bias vs. variance.png)
+![Bias vs. Variance](Images/bias vs. variance.png)
 
 \begin{enumerate}
   \item The graph on the left is a decision boundary, which does not describe the trend of the data well, so we call this type of scenario - \textbf{underfitting}. Underfitted model produce poor prediction after taking in input (Bias problem)
